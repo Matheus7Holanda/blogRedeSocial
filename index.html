@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mundz</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href= 'styles/input.css'>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Página de Login -->
+        <div id="loginPage">
+            <img class="logo" src="img/logo.png" height="200" width="200"></img>
+            <p class="mensagem">O Mundz é um espaço para compartilhar pensamentos, ideias e reflexões sobre o mundo. Cada palavra é um convite à troca de ideias.</p>
+            <h1></h1>
+            <div class="form-group">
+                <label for="loginUsername">Usuário</label>
+                <input type="text" id="loginUsername" placeholder="Digite seu usuário">
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Senha</label>
+                <input type="password" id="loginPassword" placeholder="Digite sua senha">
+            </div>
+            <button class="btn-primary" onclick="login()">Entrar</button>
+            <p class="nav">
+                <a href="#" onclick="showPage('registerPage')">Criar conta</a>
+            </p>
+            <a href="#" class="forgot-password" onclick="showPage('forgotPasswordPage')">Esqueceu a senha?</a>
+            <p id="loginMessage" class="error"></p>
+        </div>
+
+        <!-- Página de Cadastro -->
+        <div id="registerPage" class="hidden">
+            <h1>Cadastro</h1>
+            <div class="form-group">
+                <label for="registerUsername">Usuário</label>
+                <input type="text" id="registerUsername" placeholder="Escolha um usuário">
+            </div>
+            <div class="form-group">
+                <label for="registerPassword">Senha</label>
+                <input type="password" id="registerPassword" placeholder="Escolha uma senha">
+            </div>
+            <button class="btn-primary" onclick="register()">Cadastrar</button>
+            <p class="nav"><a href="#" onclick="showPage('loginPage')">Já tenho conta</a></p>
+            <p id="registerMessage" class="error"></p>
+        </div>
+
+        <!-- Página de Esqueceu a Senha -->
+        <div id="forgotPasswordPage" class="hidden">
+            <h1>Recuperar Senha</h1>
+            <div class="form-group">
+                <label for="forgotUsername">Usuário</label>
+                <input type="text" id="forgotUsername" placeholder="Digite seu usuário">
+            </div>
+            <button class="btn-primary" onclick="recoverPassword()">Enviar</button>
+            <p class="nav"><a href="#" onclick="showPage('loginPage')">Voltar ao login</a></p>
+            <p id="forgotMessage" class="error"></p>
+        </div>
+
+        <!-- Página Principal (Blog) -->
+        <div id="mainPage" class="hidden">
+            <h1 class="logo">mundz</h1>
+            <div class="header">
+                <div class="menu">
+                    <a href="#">Pagina inicial</a>
+                    <a href="#">Perfil</a>
+                    <a href="#">Configurações</a>
+                </div>
+            </div>
+            <p class="nav">Bem-vindo, <span id="currentUser"></span> |
+            <div class="form-group">
+                <label for="postTitle">Título da Postagem</label>
+                <input type="text" id="postTitle" placeholder="Digite o título">
+            </div>
+            <div class="form-group">
+                <label for="postContent">Conteúdo</label>
+                <textarea id="postContent" rows="4" placeholder="Digite o conteúdo"></textarea>
+            </div>
+            <button class="btn-primary" onclick="addOrUpdatePost()">Salvar Postagem</button>
+            <p id="postMessage" class="success"></p>
+            <h2>Postagens</h2>
+            <div class="publicacoes">
+                <h2>Teste Postagem</h2>
+                <span>01 de setembro de 2025</span>
+                <img src="./img/teste.jpg" width= "620px">
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+
+
+            </div>
+            <div id="postList"></div>
+        </div>
+    </div>
+
+    <script>
+        let users = JSON.parse(localStorage.getItem('users')) || {};
+        let posts = JSON.parse(localStorage.getItem('posts')) || [];
+        let currentUser = null;
+        let editPostIndex = -1;
+
+        function showPage(pageId) {
+            document.querySelectorAll('.container > div').forEach(page => {
+                page.classList.add('hidden');
+            });
+            document.getElementById(pageId).classList.remove('hidden');
+        }
+
+        function register() {
+            const username = document.getElementById('registerUsername').value.trim();
+            const password = document.getElementById('registerPassword').value.trim();
+            const message = document.getElementById('registerMessage');
+
+            if (!username || !password) {
+                message.textContent = 'Por favor, preencha todos os campos!';
+                return;
+            }
+
+            if (users[username]) {
+                message.textContent = 'Usuário já existe!';
+                return;
+            }
+
+            users[username] = { password };
+            localStorage.setItem('users', JSON.stringify(users));
+            message.classList.remove('error');
+            message.classList.add('success');
+            message.textContent = 'Cadastro realizado com sucesso!';
+            setTimeout(() => showPage('loginPage'), 1000);
+        }
+
+        function login() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const message = document.getElementById('loginMessage');
+
+            if (!username || !password) {
+                message.textContent = 'Por favor, preencha todos os campos!';
+                return;
+            }
+
+            if (!users[username] || users[username].password !== password) {
+                message.textContent = 'Usuário ou senha incorretos!';
+                return;
+            }
+
+            currentUser = username;
+            document.getElementById('currentUser').textContent = username;
+            showPage('mainPage');
+            renderPosts();
+        }
+
+        function recoverPassword() {
+            const username = document.getElementById('forgotUsername').value.trim();
+            const message = document.getElementById('forgotMessage');
+
+            if (!username) {
+                message.textContent = 'Por favor, preencha o campo de usuário!';
+                return;
+            }
+
+            if (!users[username]) {
+                message.textContent = 'Usuário não encontrado!';
+                return;
+            }
+
+            message.classList.remove('error');
+            message.classList.add('success');
+            message.textContent = 'Instruções de recuperação de senha foram enviadas! (Funcionalidade simulada)';
+            setTimeout(() => showPage('loginPage'), 2000);
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('loginUsername').value = '';
+            document.getElementById('loginPassword').value = '';
+            showPage('loginPage');
+        }
+
+        function addOrUpdatePost() {
+            const title = document.getElementById('postTitle').value.trim();
+            const content = document.getElementById('postContent').value.trim();
+            const message = document.getElementById('postMessage');
+
+            if (!title || !content) {
+                message.classList.remove('success');
+                message.classList.add('error');
+                message.textContent = 'Por favor, preencha todos os campos!';
+                return;
+            }
+
+            if (editPostIndex === -1) {
+                posts.push({ title, content, author: currentUser });
+            } else {
+                posts[editPostIndex] = { title, content, author: currentUser };
+                editPostIndex = -1;
+            }
+
+            localStorage.setItem('posts', JSON.stringify(posts));
+            document.getElementById('postTitle').value = '';
+            document.getElementById('postContent').value = '';
+            message.classList.remove('error');
+            message.classList.add('success');
+            message.textContent = 'Postagem salva com sucesso!';
+            renderPosts();
+        }
+
+        function editPost(index) {
+            const post = posts[index];
+            document.getElementById('postTitle').value = post.title;
+            document.getElementById('postContent').value = post.content;
+            editPostIndex = index;
+        }
+
+        function deletePost(index) {
+            if (confirm('Tem certeza que deseja excluir esta postagem?')) {
+                posts.splice(index, 1);
+                localStorage.setItem('posts', JSON.stringify(posts));
+                renderPosts();
+            }
+        }
+
+        function renderPosts() {
+            const postList = document.getElementById('lowList');
+            postList.innerHTML = '';
+
+            posts.forEach((post, index) => {
+                if (post.author === currentUser) {
+                    const postDiv = document.createElement('div');
+                    postDiv.className = 'post';
+                    postDiv.innerHTML = `
+                        <h3>${post.title}</h3>
+                        <p>${post.content}</p>
+                        <button class="btn-secondary" onclick="editPost(${index})">Editar</button>
+                        <button class="btn-danger" onclick="deletePost(${index})">Excluir</button>
+                    `;
+                    postList.appendChild(postDiv);
+                }
+            });
+        }
+
+        // Inicializa a página de login
+        showPage('loginPage');
+    </script>
+</body>
+
+</html>
